@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from importlib.util import find_spec
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,10 +39,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "corsheaders",
+    'rest_framework',
+    'rest_framework.authtoken',
+    'accounts',
     'tasks',
 ]
 
+HAS_SPECTACULAR = find_spec("drf_spectacular") is not None
+if HAS_SPECTACULAR:
+    INSTALLED_APPS.append("drf_spectacular")
+
+HAS_SIMPLEJWT = find_spec("rest_framework_simplejwt") is not None
+
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -48,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'tasks.middleware.SimpleLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -55,7 +69,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -116,3 +130,58 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# For development, allow your React app
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+
+# Alternatively, if you want to allow everything during initial testing:
+# CORS_ALLOW_ALL_ORIGINS = True
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "accounts.authentication.ExpiringTokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "20/min",
+        "user": "60/min",
+        "auth": "5/min",
+    },
+}
+
+if HAS_SIMPLEJWT:
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"].append(
+        "rest_framework_simplejwt.authentication.JWTAuthentication"
+    )
+
+if HAS_SPECTACULAR:
+    REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"] = "drf_spectacular.openapi.AutoSchema"
+
+AUTH_USER_MODEL = "accounts.User"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@localhost"
+SITE_DOMAIN = "http://localhost:8000"
+
+TOKEN_EXPIRE_HOURS = 24
+
+if HAS_SPECTACULAR:
+    SPECTACULAR_SETTINGS = {
+        "TITLE": "Django Tasks API",
+        "DESCRIPTION": "Tasks API with auth, JWT, and email flows.",
+        "VERSION": "1.0.0",
+    }
+
+if HAS_SIMPLEJWT:
+    SIMPLE_JWT = {
+        "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+        "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    }

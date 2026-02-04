@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <p>Hi {{ username }},</p>
+    <p>Welcome! Please verify your email to activate your account.</p>
+    <p>Use the values below with the verify endpoint:</p>
+    <p><strong>POST</strong> {{ site_domain }}/api/auth/verify/confirm/</p>
+    <p><strong>UID:</strong> {{ uid }}<br><strong>TOKEN:</strong> {{ token }}</p>
+    <p>If you didn't request this, you can ignore this email.</p>
+  </body>
+</html>

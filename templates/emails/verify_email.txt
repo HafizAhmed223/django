@@ -1,0 +1,11 @@
+Hi {{ username }},
+
+Welcome! Please verify your email to activate your account.
+
+Use the values below with the verify endpoint:
+POST {{ site_domain }}/api/auth/verify/confirm/
+
+UID: {{ uid }}
+TOKEN: {{ token }}
+
+If you didn't request this, you can ignore this email.

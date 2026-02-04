@@ -16,9 +16,24 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include # Import 'include'
+from .views import health_check
+
+try:
+    from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+    HAS_SPECTACULAR = True
+except Exception:
+    HAS_SPECTACULAR = False
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # This prefixes all tasks URLs with 'api/'
     path('api/', include('tasks.urls')), 
+    path('api/', include('accounts.urls')),
+    path('api/health/', health_check, name='health-check'),
 ]
+
+if HAS_SPECTACULAR:
+    urlpatterns += [
+        path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+        path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    ]
